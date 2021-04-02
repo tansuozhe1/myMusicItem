@@ -1,52 +1,65 @@
 <template>
     <div class="recommend">
         <Title>推荐歌单</Title>
+        <Loading v-if="recommendMusicList.length<=0"></Loading>
         <ul>
-            <router-link tag="li" v-for="rem in recommendMusicList" :key="rem.id" to="/">
+            <li v-for="rem in recommendMusicList" :key="rem.id" @click='getInto(rem)'>
                 <div>
                     <img :src="rem.picUrl">
                     <span class="bb"><span class="aa"></span>{{rem.playCount | format}}</span>
                 </div>
                 <p>{{rem.name}}</p>
-            </router-link>
+            </li>
         </ul>
         <Title>最新音乐</Title>
+        <Loading v-if="newMusicData.length<=0"></Loading>
         <NewMusicList :newMusicData="newMusicData"></NewMusicList>
     </div>
 </template>
 <script>
 import Title from "../components/Title";
 import NewMusicList from "../components/NewMusicList"
+import Loading from "../components/Loading"
 export default {
     name:"Recommend",
     data(){
         return {
             recommendMusicList:[],
-            newMusicData:[]
+            newMusicData:[],
         }
     },
     components:{
         Title,
-        NewMusicList
+        NewMusicList,
+        Loading
     },
-    created(){
-        this.$axios.get("/personalized?limit=6").then(data=>{
-            this.recommendMusicList = data.data.result;
-        })
-        this.$axios.get("/personalized/newsong").then(data=>{
-            this.newMusicData = data.data.result;
-            console.log(this.newMusicData);
+    methods:{
+        getInto(rem){
+            this.$router.push({path:'/recommendMusicList',query:{rem}});
+        }
+    },
+    beforeRouteEnter(to,from,next){
+        next(vm=>{
+            vm.$axios.get("/personalized?limit=6").then(data=>{
+                vm.recommendMusicList = data.data.result;
+            }).catch(()=>{})
+            vm.$axios.get("/personalized/newsong").then(data=>{
+                vm.newMusicData = data.data.result;
+                // console.log(vm.newMusicData);
+            }).catch(()=>{})
         })
     },
     filters:{
         format(v){
             return (v/10000).toFixed(1)+"万"
         }
-    }
+    },
 }
 </script>
 <style lang="less" scoped>
     .recommend{
+        margin-bottom: 79px;
+        box-sizing: border-box;
         ul{
             display:flex;
             flex-wrap: wrap;
